@@ -21,6 +21,7 @@ typedef struct {
 
 
 void ngx_time_init(void);
+void ngx_time_enable_monotonic(ngx_flag_t enable);
 void ngx_time_update(void);
 void ngx_time_sigsafe_update(void);
 u_char *ngx_http_time(u_char *buf, time_t t);

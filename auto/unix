@@ -299,6 +299,41 @@ if [ $ngx_found = no ]; then
     fi
 fi
 
+ngx_feature="clock_gettime(CLOCK_MONOTONIC)"
+ngx_feature_name="NGX_HAVE_CLOCK_MONOTONIC"
+ngx_feature_run=no
+ngx_feature_incs="#include <time.h>"
+ngx_feature_path=
+ngx_feature_libs=
+ngx_feature_test="struct timespec monotime; clock_gettime(CLOCK_MONOTONIC, &monotime);"
+. auto/feature
+
+
+if [ $ngx_found != yes ]; then
+
+    ngx_feature="clock_gettime(CLOCK_MONOTONIC) in librt"
+    ngx_feature_libs="-lrt"
+    . auto/feature
+
+    if [ $ngx_found = yes ]; then
+        CORE_LIBS="$CORE_LIBS -lrt"
+    fi
+fi
+
+if [ $ngx_found = yes ]; then
+        # We have clock_gettime with CLOCK_MONOTONIC. Now we test for faster
+        # variants (CLOCK_MONOTONIC_(FAST|COARSE)). ngx_feature_libs is set
+        # by previous tests to include librt if necessary.
+        ngx_feature="clock_gettime(CLOCK_MONOTONIC_FAST)"
+        ngx_feature_name="NGX_HAVE_CLOCK_MONOTONIC_FAST"
+        ngx_feature_test="struct timespec monotime; clock_gettime(CLOCK_MONOTONIC_FAST, &monotime);"
+        . auto/feature
+
+        ngx_feature="clock_gettime(CLOCK_MONOTONIC_COARSE)"
+        ngx_feature_name="NGX_HAVE_CLOCK_MONOTONIC_COARSE"
+        ngx_feature_test="struct timespec monotime; clock_gettime(CLOCK_MONOTONIC_COARSE, &monotime);"
+        . auto/feature
+fi
 
 ngx_feature="sched_setaffinity()"
 ngx_feature_name="NGX_HAVE_SCHED_SETAFFINITY"

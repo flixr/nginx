@@ -601,6 +601,11 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ngx_queue_init(&ngx_posted_accept_events);
     ngx_queue_init(&ngx_posted_events);
 
+    /*
+     * Monotonic time must be enabled before the first timer is created. Otherwise
+     * monotonic and realtime timestamps would be mixed in the rbtree.
+     */
+    ngx_time_enable_monotonic(ccf->monotonic_timers);
     if (ngx_event_timer_init(cycle->log) == NGX_ERROR) {
         return NGX_ERROR;
     }

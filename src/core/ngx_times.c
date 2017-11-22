@@ -59,6 +59,11 @@ static char  *week[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 static char  *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
+#if (NGX_HAVE_CLOCK_MONOTONIC)
+static ngx_flag_t enable_monotonic = 0;
+static clockid_t monotonic_clock;
+#endif
+
 void
 ngx_time_init(void)
 {
@@ -73,6 +78,37 @@ ngx_time_init(void)
     ngx_time_update();
 }
 
+void
+ngx_time_enable_monotonic(ngx_flag_t enable)
+{
+#if (NGX_HAVE_CLOCK_MONOTONIC)
+    struct timespec monotime;
+
+    if (enable) {
+        /* Hack for the 'else if's to work correctly with the '#if's */
+        if (0) {
+        }
+#if (NGX_HAVE_CLOCK_MONOTONIC_FAST)
+        else if (clock_gettime(CLOCK_MONOTONIC_FAST, &monotime) == 0) {
+            monotonic_clock = CLOCK_MONOTONIC_FAST;
+        }
+#endif
+#if (NGX_HAVE_CLOCK_MONOTONIC_COARSE)
+        else if (clock_gettime(CLOCK_MONOTONIC_COARSE, &monotime) == 0) {
+            monotonic_clock = CLOCK_MONOTONIC_COARSE;
+        }
+#endif
+        else if (clock_gettime(CLOCK_MONOTONIC, &monotime) == 0) {
+            monotonic_clock = CLOCK_MONOTONIC;
+        } else {
+            /* No monotonic clock found at runtime, must disable. FIXME should this emit a warning? */
+            enable = 0;
+        }
+    }
+    enable_monotonic = enable;
+    ngx_time_update();
+#endif
+}
 
 void
 ngx_time_update(void)
@@ -93,7 +129,18 @@ ngx_time_update(void)
     sec = tv.tv_sec;
     msec = tv.tv_usec / 1000;
 
-    ngx_current_msec = (ngx_msec_t) sec * 1000 + msec;
+#if (NGX_HAVE_CLOCK_MONOTONIC)
+    if (enable_monotonic) {
+        struct timespec monotime;
+        clock_gettime(monotonic_clock, &monotime);
+        ngx_current_msec = (ngx_msec_t) (monotime.tv_sec) * 1000 + (monotime.tv_nsec / 1000 / 1000);
+    } else {
+#endif
+        ngx_current_msec = (ngx_msec_t) sec * 1000 + msec;
+#if (NGX_HAVE_CLOCK_MONOTONIC)
+    }
+#endif
+
 
     tp = &cached_time[slot];
 

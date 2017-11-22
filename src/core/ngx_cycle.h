@@ -114,6 +114,8 @@ typedef struct {
 
     ngx_array_t               env;
     char                    **environment;
+
+    ngx_flag_t                monotonic_timers;
 } ngx_core_conf_t;
 
 

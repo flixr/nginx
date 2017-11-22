@@ -334,6 +334,7 @@ syn keyword ngxDirective contained merge_slashes
 syn keyword ngxDirective contained min_delete_depth
 syn keyword ngxDirective contained modern_browser
 syn keyword ngxDirective contained modern_browser_value
+syn keyword ngxDirective contained monotonic_timers
 syn keyword ngxDirective contained mp4
 syn keyword ngxDirective contained mp4_buffer_size
 syn keyword ngxDirective contained mp4_max_buffer_size
